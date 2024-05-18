@@ -2,15 +2,15 @@
   "comment": "This file is kept up to date via update.sh",
   "browsers": {
     "chromium": {
-      "revision": "1105",
-      "browserVersion": "123.0.6312.4"
+      "revision": "1117",
+      "browserVersion": "125.0.6422.26"
     },
     "firefox": {
-      "revision": "1440",
-      "browserVersion": "123.0"
+      "revision": "1449",
+      "browserVersion": "125.0.1"
     },
     "webkit": {
-      "revision": "1983",
+      "revision": "2003",
       "revisionOverrides": {
         "mac10.14": "1446",
         "mac10.15": "1616",

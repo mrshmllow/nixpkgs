@@ -17,8 +17,8 @@ stdenv.mkDerivation {
   src = fetchzip {
     url = "https://playwright.azureedge.net/builds/firefox/${revision}/firefox-${suffix'}.zip";
     sha256 = {
-      x86_64-linux = "0jv6vpxbbl2hr0wcvsy8p3vrrxgmixyjn2iiwvc8ffpcpzvk529v";
-      aarch64-linux = "0ygwx86bsrrjn0dfr4dbvpsc07h8hmy34llycn9rfm08iiwiwhw7";
+      x86_64-linux = "00gjpkagbnk2rpnw394l4b53zvl10yqcaj075fa0hc5fnv6bzydd";
+      aarch64-linux = "025q1vv835pnl60y8sl9r3r08cmjw68ing2ng7r61ycwqa223i9h";
     }.${system} or throwSystem;
   };
 
