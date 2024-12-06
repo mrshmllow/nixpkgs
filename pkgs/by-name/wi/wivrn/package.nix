@@ -10,7 +10,7 @@
   boost,
   cli11,
   cmake,
-  cudaPackages ? { },
+  cudaPackages ? {},
   cudaSupport ? config.cudaSupport,
   eigen,
   ffmpeg,
@@ -40,16 +40,19 @@
   vulkan-loader,
   vulkan-tools,
   x264,
+  openssl,
+  glib,
+  libnotify,
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "wivrn";
-  version = "0.19";
+  version = "0.22";
 
   src = fetchFromGitHub {
     owner = "wivrn";
     repo = "wivrn";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-DYV+JUWjjhLZLq+4Hv7jxOyxDqQut/mU1X0ZFMoNkDI=";
+    hash = "sha256-i/CG+zD64cwnu0z1BRkRn7Wm67KszE+wZ5geeAvrvMY=";
   };
 
   monado = applyPatches {
@@ -57,17 +60,35 @@ stdenv.mkDerivation (finalAttrs: {
       domain = "gitlab.freedesktop.org";
       owner = "monado";
       repo = "monado";
-      rev = "bcbe19ddd795f182df42051e5495e9727db36c1c";
-      hash = "sha256-sh5slHROcuC3Dgenu1+hm8U5lUOW48JUbiluYvc3NiQ=";
+      rev = "aa2b0f9f1d638becd6bb9ca3c357ac2561a36b07";
+      hash = "sha256-yfHtkMvX/gyVG0UgpSB6KjSDdCym6Reb9LRb3OortaI=";
     };
 
     patches = [
-      "${finalAttrs.src}/patches/monado/0001-c-multi-disable-dropping-of-old-frames.patch"
-      "${finalAttrs.src}/patches/monado/0002-ipc-server-Always-listen-to-stdin.patch"
-      "${finalAttrs.src}/patches/monado/0003-c-multi-Don-t-log-frame-time-diff.patch"
+      "${finalAttrs.src}/patches/monado/0001-c-multi-early-wake-of-compositor.patch"
+      "${finalAttrs.src}/patches/monado/0003-ipc-server-Always-listen-to-stdin.patch"
+      "${finalAttrs.src}/patches/monado/0004-Use-extern-socket-fd.patch"
       "${finalAttrs.src}/patches/monado/0005-distortion-images.patch"
+      "${finalAttrs.src}/patches/monado/0006-environment-blend-mode.patch"
       "${finalAttrs.src}/patches/monado/0008-Use-mipmaps-for-distortion-shader.patch"
       "${finalAttrs.src}/patches/monado/0009-convert-to-YCbCr-in-monado.patch"
+      "${finalAttrs.src}/patches/monado/0010-d-solarxr-Add-SolarXR-WebSockets-driver.patch"
+      "${finalAttrs.src}/patches/monado/0011-Revert-a-bindings-improve-reproducibility-of-binding.patch"
+      "${finalAttrs.src}/patches/monado/0012-store-alpha-channel-in-layer-1.patch"
+    ];
+  };
+
+  imgui = applyPatches {
+    src = fetchFromGitHub {
+      owner = "ocornut";
+      repo = "imgui";
+      rev = "v1.91.3";
+      hash = "sha256-J4gz4rnydu8JlzqNC/OIoVoRcgeFd6B1Qboxu5drOKY=";
+    };
+
+    patches = [
+      "${finalAttrs.src}/patches/imgui/0001-Change-ImGui-ButtonBehavior-default-flags-when-using.patch"
+      "${finalAttrs.src}/patches/imgui/0002-Add-ImGuiWindowFlags_NoFocusOnClick-flag.patch"
     ];
   };
 
@@ -85,42 +106,49 @@ stdenv.mkDerivation (finalAttrs: {
     fi
   '';
 
-  nativeBuildInputs = [
-    cmake
-    git
-    glslang
-    pkg-config
-    python3
-  ] ++ lib.optionals cudaSupport [ autoAddDriverRunpath ];
+  nativeBuildInputs =
+    [
+      cmake
+      git
+      glslang
+      pkg-config
+      python3
+      glib
+    ]
+    ++ lib.optionals cudaSupport [autoAddDriverRunpath];
 
-  buildInputs = [
-    avahi
-    boost
-    cli11
-    eigen
-    ffmpeg
-    freetype
-    glm
-    harfbuzz
-    libdrm
-    libGL
-    libva
-    libX11
-    libXrandr
-    libpulseaudio
-    nlohmann_json
-    onnxruntime
-    openxr-loader
-    pipewire
-    shaderc
-    spdlog
-    systemd
-    udev
-    vulkan-headers
-    vulkan-loader
-    vulkan-tools
-    x264
-  ] ++ lib.optionals cudaSupport [ cudaPackages.cudatoolkit ];
+  buildInputs =
+    [
+      avahi
+      boost
+      cli11
+      eigen
+      ffmpeg
+      freetype
+      glm
+      harfbuzz
+      libdrm
+      libGL
+      libva
+      libX11
+      libXrandr
+      libpulseaudio
+      nlohmann_json
+      onnxruntime
+      openxr-loader
+      pipewire
+      shaderc
+      spdlog
+      systemd
+      udev
+      vulkan-headers
+      vulkan-loader
+      vulkan-tools
+      x264
+      openssl
+      libnotify
+    ]
+    ++ lib.optionals cudaSupport [cudaPackages.cudatoolkit];
 
   cmakeFlags = [
     (lib.cmakeBool "WIVRN_USE_VAAPI" true)
@@ -133,16 +161,17 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.cmakeBool "WIVRN_OPENXR_INSTALL_ABSOLUTE_RUNTIME_PATH" true)
     (lib.cmakeBool "FETCHCONTENT_FULLY_DISCONNECTED" true)
     (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_MONADO" "${finalAttrs.monado}")
+    (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_IMGUI" "${finalAttrs.imgui}")
   ];
 
-  passthru.updateScript = nix-update-script { };
+  passthru.updateScript = nix-update-script {};
 
   meta = with lib; {
     description = "An OpenXR streaming application to a standalone headset";
     homepage = "https://github.com/Meumeu/WiVRn/";
     changelog = "https://github.com/Meumeu/WiVRn/releases/";
     license = licenses.gpl3Only;
-    maintainers = with maintainers; [ passivelemon ];
+    maintainers = with maintainers; [passivelemon];
     platforms = platforms.linux;
     mainProgram = "wivrn-server";
   };
